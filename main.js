@@ -4,8 +4,8 @@ import { BrowserProvider } from 'https://unpkg.com/@filecoin-shipyard/lotus-clie
 import { testnet } from 'https://unpkg.com/@filecoin-shipyard/lotus-client-schema?module'
 import { Fetcher } from './fetcher.js';
 import { Stats } from './stats.js';
-import { Estimator } from './estimator.js';
-import { drawPieGasSectorsUsed } from './view.js';
+import { Simulator } from './simulator.js';
+import { Drawer } from './view.js';
 
 const endpointUrl = 'wss://node.glif.io/space07/lotus/rpc/v0'
 const provider = new BrowserProvider(endpointUrl)
@@ -13,13 +13,25 @@ const client = new LotusRPC(provider, { schema: testnet.fullNode })
 
 const f = new Fetcher(endpointUrl)
 const stats = new Stats(f,3) 
-const est = new Estimator(stats)
+const sim = new Simulator(stats)
+const drawer = new Drawer(sim)
 async function run () {
     // wait that stats get all the data necessary
-    await est.fetchData()
-    est.describe()
-    drawPieGasSectorsUsed(est)
+    await sim.fetchData()
+    sim.describe()
+    drawer.drawPieGasSectorsUsed()
+    drawer.drawPieTxSectorsUsed()
+    /*console.log("HELLO WORLD")*/
+    //console.log("rounds in deadline: ",Simulator.roundsInDeadline)
+    //console.log("wpostHeight: ",sim.wpostHeight)
+    //const dataset = sim.simulate({
+        //period: 100,
+        //cb: (d) => { 
+            //console.log("simulation peek: ",d);
+            //drawer.drawSimulation(d);
+        //},
+    /*});*/
+    /*console.log("simulation finished ",dataset[dataset.length-1].round, "rounds")*/
 }
-
 run()
 

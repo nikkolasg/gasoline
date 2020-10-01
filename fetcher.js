@@ -61,10 +61,9 @@ export class Fetcher {
             throw new Error("invalid length")
         }
         const allMsgs = zip(msgs,receipts)
-        console.log(cid["/"],": all messages: ", allMsgs)
+        //console.log(cid["/"],": all messages: ", allMsgs)
         const filtered = allMsgs.filter(entry => {
-            const tx = entry[0]
-            const r = entry[1]
+            const [tx, r] = entry
             const exit = r.ExitCode == 0 
             const method = methods.includes(tx.Message.Method)
             return exit && method

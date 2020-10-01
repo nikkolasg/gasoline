@@ -23,6 +23,24 @@ export class Stats {
         console.log("Stats: got " + this.cids.length + " tipset CIDs to make stats from")
     }
 
+    /// Giving no methods returns for all methods
+    /// XXX Do that for all the rest of the methods
+    async maxGasUsedPerHeight(...methods) {
+        var max = 0
+        for (var cidx in this.cids) {
+            var lmax = 0
+            if (methods.length == 0) {
+                lmax = await this.fetcher.totalGasUsed(this.cids[cidx])
+            } else {
+                lmax = await this.fetcher.parentMessagesForMethod(this.cids[cidx],methods)
+            }
+            if (lmax > max) {
+                max = lmax
+            }
+        }
+        return max
+    }
+
     async avgGasUsedPerHeight() {
         var avg = 0
         for (var cidx in this.cids) {
@@ -52,12 +70,17 @@ export class Stats {
         return avg/nboftx
     }
 
-}
-
-async function avg(to, cb) {
-    var r = 0
-    for (var i = 0; i < inputs.length; i++) {
-        r += int(await cb(i))
+    async avgTxPerHeightFor(...methods) {
+        var avg = 0 
+        for (var cid in this.cids) {
+            var msgs = undefined
+            if (methods.length == 0) {
+                msgs = await this.fetcher.parentMessages(this.cids[cid])
+            } else {
+                msgs = await this.fetcher.parentMessagesForMethod(this.cids[cid],methods)
+            }
+            avg += msgs.length
+        }
+        return avg / this.cids.length
     }
-    return r/inputs.length
 }
