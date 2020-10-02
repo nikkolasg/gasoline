@@ -25,7 +25,23 @@
                 <canvas id="pieTxSectors">Loading...</canvas>
             </div>
         </div>
+        </hr>
+        <div class="row">
+            <p> This shows the users spending the highest amount of gas on the last two blocks
+            ONLY for sectors related method.
+            </p>
+        </div>
+        <div class="row">
+            <div class="col">
+                <canvas id="pieGasUsers1">Loading...</canvas>
+            </div>
+            <div class="col">
+                <canvas id="pieGasUsers2">Loading...</canvas>
+            </div>
+        </div>
+
     </div>
+    </hr>
     <div class="container">
        <div class="row">
             <div class="col-12">
@@ -49,10 +65,11 @@
                     commits and pre commits as possible (keeping both equal),
                     until we reach the average total gas used.</li>
                 <li>We stop the simulation when we reach
-                    a certain percentage of our emboarding rate (1% currently),
-                    and record the various informations.</li>
+                    a certain percentage of the initial growth rate (1%
+                    currently), and record the various informations.</li>
             </ul> 
        </div>
+       </hr>
         <div class="row">
             <div class="col-12">
                 <h2 class="text-center">Results</h2>
@@ -64,7 +81,7 @@
             </div>
         </div>
        <div class="row">
-           <canvas id="simulation">Loading...</canvas>
+           <canvas id="pieSimulationGas">Loading...</canvas>
        </div>
        <div class="row">
            <canvas id="simulationGraph">Loading....</canvas>

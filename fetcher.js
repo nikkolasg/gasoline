@@ -54,21 +54,21 @@ export class Fetcher {
         return await this.client.chainGetParentMessages(cid)
     }
 
-    async parentMessagesForMethod(cid, methods) {
+    async parentAndReceiptsMessages(cid, ...methods) {
         const msgs = await this.parentMessages(cid)
         const receipts = await this.receiptParentMessages(cid)
         if (msgs.length != receipts.length) {
             throw new Error("invalid length")
         }
-        const allMsgs = zip(msgs,receipts)
-        //console.log(cid["/"],": all messages: ", allMsgs)
-        const filtered = allMsgs.filter(entry => {
-            const [tx, r] = entry
-            const exit = r.ExitCode == 0 
-            const method = methods.includes(tx.Message.Method)
-            return exit && method
+        return zip(msgs,receipts).filter(entry =>  {
+            const [tx,r] = entry
+            const exit =  r.ExitCode == 0
+            var inMethod = true
+            if (methods.length > 0) {
+                inMethod =  methods.includes(tx.Message.Method)
+            }
+            return exit && inMethod
         })
-        return filtered
     }
 
 }

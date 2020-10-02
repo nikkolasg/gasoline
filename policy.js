@@ -10,3 +10,9 @@ export function pbToGB(v) { return v*1024*1024}
 // commits at one height (or an average etc)
 export function growthRate(prove) { return gbToPB(prove * 32) * roundsPerDay }
 export function roundsInDays(rounds) { return Math.ceil(rounds / 2 / 60 / 24) }
+
+export function objectMap(obj, fn) {
+    return Object.entries(obj).map(
+      ([k, v], i) => fn(v, k, i)
+    )
+}

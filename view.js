@@ -117,7 +117,7 @@ export class Drawer  {
             ],
                 labels: data.map((d) => Math.ceil(utils.roundsInDays(d.round))),
             };
-            window.pieSimulation = new Chart(ctx, {
+            window.graphGas = new Chart(ctx, {
                 type: 'line',
                 data: simulData,
                 options: {
@@ -143,11 +143,11 @@ export class Drawer  {
         // update text
         var n = document.getElementById("simul-status")
         var strs = [
-            "<p>Final emboarding rate of sectors per epoch: " + data.commits + " sectors/rounds</p>",
-            "<p>Initial emboarding rate in PB per day: " + utils.growthRate(fullData[0].commits) + "</p>",
-            '<p class="font-weight-bold">Final emboarding rate in PB per day: ' + utils.growthRate(data.commits) + ' PB/day</p>',
-            "<p>Percentage of gas used for window post per height: " + 100*wgas/(wgas+pregas+provegas+leftgas) + "% </p>",
-            '<p class="font-weight-bold">Days before reaching this rate: ' + data.round / utils.roundsPerDay + " days</p>",
+            "<p>Final emboarding rate of sectors per epoch: " + Math.round(data.commits) + " sectors/rounds</p>",
+            "<p>Initial emboarding rate in PB per day: " + utils.growthRate(fullData[0].commits).toFixed(2) + "</p>",
+            '<p class="font-weight-bold">Final emboarding rate in PB per day: ' + utils.growthRate(data.commits).toFixed(2) + ' PB/day</p>',
+            "<p>Percentage of gas used for window post per height: " + (100*wgas/(wgas+pregas+provegas+leftgas)).toFixed(2) + "% </p>",
+            '<p class="font-weight-bold">Days before reaching this rate: ' + (data.round / utils.roundsPerDay).toFixed(2) + " days</p>",
         ]
          
         n.innerHTML = strs.join("") 
@@ -169,7 +169,7 @@ export class Drawer  {
                 
         // update pie chart
         if (window.pieSimulation == undefined) {
-            var ctx = document.getElementById("simulation").getContext('2d');
+            var ctx = document.getElementById("pieSimulationGas").getContext('2d');
             let simulData = {
                 datasets: [{
                     data: [
@@ -230,7 +230,7 @@ export class Drawer  {
             ],
                 labels: data.map((d) => utils.roundsInDays(d.round)),
             };
-            window.pieSimulation = new Chart(ctx, {
+            window.pieGraphGrowth = new Chart(ctx, {
                 type: 'line',
                 data: simulData,
                 options: {
@@ -242,5 +242,32 @@ export class Drawer  {
             });
     }
 
-
+    drawGasPerUser(dataset,{ maxUser = 5} = {}) {            
+        var es = this.estimator
+        const drawPie = function(id,height,data) {
+            var ctx = document.getElementById(id).getContext('2d');
+            let simulData = {
+                datasets: [{
+                    data: data.slice(0,maxUser).map((d) => d[1]),
+                    backgroundColor: utils.objectMap(window.chartColors,(color,name) => color).slice(0,maxUser),
+                    label: "transaction gas",
+                }],
+                labels: data.slice(0,maxUser).map((d) => d[0]),
+            };
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: simulData,
+                options: {
+                    title: {
+                    display: true,
+                    text: 'Highest gas users on height ' + height,
+                    }
+                }
+            });
+        }
+        // sort by decreasing order
+        const sortedHeight = Object.keys(dataset).sort((a,b) => b - a)
+        window.pieGasUser1 = drawPie("pieGasUsers1",sortedHeight[0],dataset[sortedHeight[0]])
+        window.pieGasUser2 = drawPie("pieGasUsers2",sortedHeight[1],dataset[sortedHeight[1]])
+    }
 }

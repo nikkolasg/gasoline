@@ -22,9 +22,9 @@ async function run () {
     sim.describe()
     drawer.drawPieGasSectorsUsed()
     drawer.drawPieTxSectorsUsed()
-    console.log("HELLO WORLD")
-    await sleep(2000)
-    console.log("SIMULATION STARTING")
+    console.log("BIGGEST GAS USER: ",(await stats.biggestGasUserFor()))
+    const biggest = await stats.biggestGasUserFor(5,6,7)
+    drawer.drawGasPerUser(biggest)
     const dataset = await sim.simulate({
         stopGrowthRatio:0.01,
         period: 10000,
@@ -35,8 +35,6 @@ async function run () {
             //return false;
         },
     });
-    const r = dataset[dataset.length-1].round;
-    console.log("simulation finished ", r,"rounds = ", r/2/60/24/365,"years")
     drawer.printResult(dataset)
     drawer.drawGraphGas(dataset)
     drawer.drawGraphGrowth(dataset)

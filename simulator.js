@@ -42,7 +42,8 @@ export class Simulator {
             - this.wpostHeightGas
             - this.preHeightGas
             - this.proveHeightGas
-        const stopThreshold = this.proveHeight * stopGrowthRatio
+        const initRate = utils.growthRate(this.proveHeight)
+        const stopThreshold = utils.growthRate(this.proveHeight) * stopGrowthRatio
         // we start at the first deadline
         let deadline = 0
         let round = 0
@@ -57,13 +58,10 @@ export class Simulator {
             // preGas*x + proveGas*x = gasLeft <=> x = gasLeft/(pre+prove)
             const commits = gasLeft / (this.preGas + this.proveGas)
             //console.log("wpost",wpost, "gasLeft", gasLeft, "commits", commits,"toprove[deadline]",toProve[deadline])
-            if (commits < stopThreshold) {
-                console.log("simulation stop after ",round, " rounds",commits,"<",stopThreshold,toProve)
-                return dataset
-            }
-
+            
+            const isFinished = utils.growthRate(commits) < stopThreshold
             // time to insert dataset
-            if ((round % period) == 0) {
+            if ((round % period) == 0 || isFinished == true) {
                 dataset.push({
                     round: round,
                     wpost:wpost,
@@ -74,6 +72,10 @@ export class Simulator {
                     console.log("early termination")
                     return dataset
                 }
+            }
+            if (isFinished == true) {
+                console.log("simulation stop after ",round, " rounds",utils.growthRate(commits),"<",stopThreshold," init rate: ",initRate," -> toProve array: ",toProve)
+                return dataset
             }
             // we add this number of sectors to be proven in ~24h
             toProve[(deadline-1) % utils.deadlines] += commits
@@ -122,12 +124,4 @@ export class Simulator {
 
 }
 
-function defaultHandler(defaultValue) {
-  return { 
-      get: function(obj, prop) {
-        return prop in obj ?
-        obj[prop] :
-        defaultvalue;
-    }
-  }
-}
+

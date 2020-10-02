@@ -1,4 +1,7 @@
+import * as utils from './policy.js';
+
 export class Stats {
+
     constructor(fetcher, average) {
         this.fetcher = fetcher
         this.average = average
@@ -13,14 +16,18 @@ export class Stats {
         console.log("latest head: ", head)
         console.log("latest head height: ", height)
         this.cids = [head.Cids[0]]
+        this.heights = {}
+        this.heights[head.Cids[0]["/"]] = height
         var lastTs = head.Cids
         for (var i= 1; i < this.average; i++) {
             const tipset = await this.fetcher.tipset(height - i,lastTs)
             lastTs = tipset.Cids
             this.cids.push(tipset.Cids[0])
-            console.log(i,"/",this.average,": init fetched tipset with [0] = ",tipset.Cids[0])
+            this.heights[tipset.Cids[0]["/"]] = tipset.Height
+            console.log(i,"/",this.average,": init fetched tipset at height ", tipset.Height, " with [0] = ",tipset.Cids[0])
         }
         console.log("Stats: got " + this.cids.length + " tipset CIDs to make stats from")
+        console.log(this.heights)
     }
 
     /// Giving no methods returns for all methods
@@ -28,12 +35,7 @@ export class Stats {
     async maxGasUsedPerHeight(...methods) {
         var max = 0
         for (var cidx in this.cids) {
-            var lmax = 0
-            if (methods.length == 0) {
-                lmax = await this.fetcher.totalGasUsed(this.cids[cidx])
-            } else {
-                lmax = await this.fetcher.parentMessagesForMethod(this.cids[cidx],methods)
-            }
+            const lmax = await this.fetcher.parentAndReceiptsMessages(this.cids[cidx],...methods)
             if (lmax > max) {
                 max = lmax
             }
@@ -53,7 +55,7 @@ export class Stats {
     async avgGasUsedPerHeightFor(...methods) {
         var avg = 0
         for (var cid in this.cids) { 
-            const msgs = await this.fetcher.parentMessagesForMethod(this.cids[cid],methods)
+            const msgs = await this.fetcher.parentAndReceiptsMessages(this.cids[cid],...methods)
             avg += msgs.reduce((total,v) => total + v[1].GasUsed, 0)
         }
         return avg/this.cids.length
@@ -63,7 +65,7 @@ export class Stats {
         var avg = 0
         var nboftx = 0
         for (var cid in this.cids) {
-            const msgs = await this.fetcher.parentMessagesForMethod(this.cids[cid],[method])
+            const msgs = await this.fetcher.parentAndReceiptsMessages(this.cids[cid],method)
             avg += msgs.reduce((total,v) => total + v[1].GasUsed,0)
             nboftx += msgs.length
         }
@@ -73,15 +75,43 @@ export class Stats {
     async avgTxPerHeightFor(...methods) {
         var avg = 0 
         for (var cid in this.cids) {
-            var msgs = undefined
-            if (methods.length == 0) {
-                msgs = await this.fetcher.parentMessages(this.cids[cid])
-            } else {
-                msgs = await this.fetcher.parentMessagesForMethod(this.cids[cid],methods)
-            }
+            const msgs = await this.fetcher.parentAndReceiptsMessages(this.cids[cid],...methods)
             avg += msgs.length
         }
         return avg / this.cids.length
     }
 
+    async biggestGasUserFor(...methods) {
+        var datas = {}
+        for (var cid in this.cids) {
+            const msgs = await this.fetcher.parentAndReceiptsMessages(this.cids[cid],...methods)
+            var users = msgs.reduce((acc, tuple) => {
+                if (acc[tuple[0].Message.To] == undefined) {
+                    acc[tuple[0].Message.To] = 0
+                }
+                acc[tuple[0].Message.To] += tuple[1].GasUsed
+                return acc
+            },{})
+            // combinatio of mapping over dict
+            // https://stackoverflow.com/questions/14810506/map-function-for-objects-instead-of-arrays
+            // and sorting in decreasing order
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
+            var sorted = utils.objectMap(users, (gas,user) => [user,gas]).sort((a,b) => b[1] - a[1])
+            datas[this.heights[this.cids[cid]["/"]]] = sorted
+        }
+        console.log("biggests user gas: ",datas)
+        return datas
+    }
 }
+
+function defaultHandler(defaultValue) {
+  return { 
+      get: function(obj, prop) {
+        return prop in obj ?
+        obj[prop] :
+        defaultvalue;
+    }
+  }
+}
+
+
