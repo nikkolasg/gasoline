@@ -1,3 +1,5 @@
+import * as utils from './policy.js';
+
 export class Simulator {
     wpostGas = undefined
     preGas = undefined
@@ -6,18 +8,6 @@ export class Simulator {
     preHeightGas = undefined
     proveHeightGas =  undefined
     totalHeightGas  = undefined
-
-    static roundsPerDay = 2 * 60 * 24
-    static roundsInDeadline = 2 * 30 
-    static deadlines = 48
-    static maxSectorsPerPost = 2349
-    static wpostToSectors = (wpost) => maxSectorsPerPost * wpost
-    static sectorsToPost = (sectors) => sectors / maxSectorsPerPost
-    static gbToPB = (v) => v/1024/1024
-    static pbToGB = (v) => v*1024*1024
-    // Returns the estimated growthRate per day assuming this number of prove
-    // commits at one height (or an average etc)
-    static growthRate = (prove) => gbToPB(proveCommits * 32) * roundsPerDay 
 
     constructor(stats,fetcher) {
         this.stats = stats
@@ -39,14 +29,14 @@ export class Simulator {
     /// period represents the period between two dataset insertion. Since the
     /// simulation can hold for many rounds, we only save that many data points.
     /// cb is called at each dataset insertion if provided.
-    simulate({stopGrowthRatio=0.1,period=1000,cb=undefined} = {}) {
+    async simulate({stopGrowthRatio=0.1,period=10000,cb=async () => {}} = {}) {
         console.log("running simulation")
         const dataset = []
-        // start with windowpost already spread in the deadline as it is now
+        // start with sectors already spread in the deadline as it is now
         // i.e. current average of window post per height * number of rounds in
         // deadline
-        const toProve = [...Array(Simulator.deadlines)]
-            .map((v) => this.wpostHeight * Simulator.roundsInDeadline)
+        const toProve = [...Array(utils.deadlines)]
+            .map((v) => utils.wpostToSectors(this.wpostHeight) * utils.roundsInDeadline)
         // how much gas do we reserve for non sectors related tx
         const nonSectorsGas = this.totalHeightGas 
             - this.wpostHeightGas
@@ -59,17 +49,17 @@ export class Simulator {
         console.log("TOPROVE: ",toProve)
         while (true) {
             // how much wpost must I prove at this current height
-            const wpost = toProve[deadline] / Simulator.roundsInDeadline  
+            const wpost = utils.sectorsToPost(toProve[deadline] / utils.roundsInDeadline)
             const wpostGas = wpost * this.wpostGas
             const gasLeft = this.totalHeightGas - nonSectorsGas - wpostGas
             // we spread the gas left proportionally so we have as many
             // precommit as provecommits 
             // preGas*x + proveGas*x = gasLeft <=> x = gasLeft/(pre+prove)
             const commits = gasLeft / (this.preGas + this.proveGas)
-            console.log("wpost",wpost, "gasLeft", gasLeft, "commits", commits,"toprove[deadline]",toProve[deadline])
+            //console.log("wpost",wpost, "gasLeft", gasLeft, "commits", commits,"toprove[deadline]",toProve[deadline])
             if (commits < stopThreshold) {
                 console.log("simulation stop after ",round, " rounds",commits,"<",stopThreshold,toProve)
-                break
+                return dataset
             }
 
             // time to insert dataset
@@ -79,78 +69,20 @@ export class Simulator {
                     wpost:wpost,
                     commits: commits,
                 })
-                if (cb != undefined) {
-                    cb(dataset[dataset.length - 1])
+                const ret = await cb(dataset[dataset.length - 1])
+                if (ret == false) {
+                    console.log("early termination")
+                    return dataset
                 }
             }
             // we add this number of sectors to be proven in ~24h
-            toProve[(deadline-1) % Simulator.deadlines] += commits
+            toProve[(deadline-1) % utils.deadlines] += commits
             round += 1
-            if ((round % Simulator.roundsInDeadline) == 0) {
-                deadline = (deadline + 1) % Simulator.deadlines
+            if ((round % utils.roundsInDeadline) == 0) {
+                deadline = (deadline + 1) % utils.deadlines
             }
         }
-        return dataset
     }
-
-    /*simulate2({growthRatePB=10,period=1000,cb=undefined} = {}) {*/
-        //console.log("running simulation")
-        //const dataset = []
-        //// start with windowpost already spread in the deadline as it is now
-        //// i.e. current average of window post per height * number of rounds in
-        //// deadline
-        //const toProve = [...Array(Simulator.deadlines)]
-            //.map((v) => 0)
-        //const growthRateSectors = Simulator.pbToGB(growthRatePB)
-        //// how mch prove commit gas i need to spend to attain that growth
-        //const growthGas = this.growthRateSectors * this.proveGas
-        //// how much gas do we reserve for non sectors related tx
-        //const nonSectorsGas = this.totalHeightGas 
-            //- this.wpostHeightGas
-            //- this.preHeightGas
-            //- this.proveHeightGas
-        //const stopThreshold = this.proveHeight * stopGrowthRatio
-        //// we start at the first deadline
-        //let deadline = 0
-        //let round = 0
-        //console.log("TOPROVE: ",toProve)
-        //while (true) {
-            //// how much wpost must I prove at this current height
-            //const wpost = toProve[deadline] / Simulator.roundsInDeadline  
-            //const wpostGas = wpost * this.wpostGas
-            //const gasLeft = this.totalHeightGas - nonSectorsGas - wpostGas
-            //// we spread the gas left proportionally so we have as many
-            //// precommit as provecommits 
-            //// preGas*x + proveGas*x = gasLeft <=> x = gasLeft/(pre+prove)
-            //const commits = gasLeft / (this.preGas + this.proveGas)
-            //console.log("wpost",wpost, "gasLeft", gasLeft, "commits", commits,"toprove[deadline]",toProve[deadline])
-            //if (commits < stopThreshold) {
-                //console.log("simulation stop after ",round, " rounds",commits,"<",stopThreshold,toProve)
-                //break
-            //}
-
-            //// time to insert dataset
-            //if ((round % period) == 0) {
-                //dataset.push({
-                    //round: round,
-                    //wpost:wpost,
-                    //commits: commits,
-                //})
-                //if (cb != undefined) {
-                    //cb(dataset[dataset.length - 1])
-                //}
-            //}
-            //// we add this number of sectors to be proven in ~24h
-            //toProve[(deadline-1) % Simulator.deadlines] += commits
-            //round += 1
-            //if ((round % Simulator.roundsInDeadline) == 0) {
-                //deadline = (deadline + 1) % Simulator.deadlines
-            //}
-        //}
-        //return dataset
-
-    //}
-
 
     async fetchData() {
         await this.stats.init()

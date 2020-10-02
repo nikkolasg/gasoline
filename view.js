@@ -1,3 +1,5 @@
+import * as utils from './policy.js';
+
 export class Drawer  {
 
     constructor(estimator) {
@@ -75,7 +77,16 @@ export class Drawer  {
         });
     }
 
+    // graph requires full dataset of the simulation
+    drawGraph(data)  {
+
+    }
+
     drawSimulation(data) {
+        if (data.length > 1) {
+            // only take the last data if we give everything
+            data = data[data.length - 1]
+        }
         const wgas = data.wpost * this.estimator.wpostGas
         const pregas = data.commits * this.estimator.preGas
         const provegas = data.commits * this.estimator.proveGas
@@ -84,9 +95,20 @@ export class Drawer  {
             - pregas
             - provegas
 
-        if (this.simulData == undefined) {
+        // update text
+        var n = document.getElementById("simul-status")
+        var strs = [
+            "Emboarding rate in sectors per height: " + data.commits,
+            "Emboarding rate in PB per day: " + utils.growthRate(data.commits),
+            "Percentage of gas used for window post per height: " + 100*wgas/(pregas+provegas+leftgas)
+        ]
+         
+        n.innerHTML = strs.join("<br>") 
+        
+        // update pie chart
+        if (window.pieSimulation == undefined) {
             var ctx = document.getElementById("simulation").getContext('2d');
-            this.simulData = {
+            let simulData = {
                 datasets: [{
                     data: [
                         wgas,
@@ -109,12 +131,14 @@ export class Drawer  {
                     'Rest of tx'
                 ]
             };
-            window.pieGasSectorsUsed = new Chart(ctx, {
+            window.pieSimulation = new Chart(ctx, {
                 type: 'pie',
-                data: this.simulData,
+                data: simulData,
             });
         } else {
-            this.simulData.datasets.data = [wgas,pregas,provegas,leftgas]
+            //this.simulData.datasets.data = [wgas,pregas,provegas,leftgas]
+            window.pieSimulation.data.datasets[0].data = [wgas,pregas,provegas,leftgas]
+            window.pieSimulation.update()
         }
     }
 }

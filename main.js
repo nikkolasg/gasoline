@@ -15,23 +15,29 @@ const f = new Fetcher(endpointUrl)
 const stats = new Stats(f,3) 
 const sim = new Simulator(stats)
 const drawer = new Drawer(sim)
+const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 async function run () {
     // wait that stats get all the data necessary
     await sim.fetchData()
     sim.describe()
     drawer.drawPieGasSectorsUsed()
     drawer.drawPieTxSectorsUsed()
-    /*console.log("HELLO WORLD")*/
-    //console.log("rounds in deadline: ",Simulator.roundsInDeadline)
-    //console.log("wpostHeight: ",sim.wpostHeight)
-    //const dataset = sim.simulate({
-        //period: 100,
-        //cb: (d) => { 
-            //console.log("simulation peek: ",d);
-            //drawer.drawSimulation(d);
-        //},
-    /*});*/
-    /*console.log("simulation finished ",dataset[dataset.length-1].round, "rounds")*/
+    console.log("HELLO WORLD")
+    await sleep(2000)
+    console.log("SIMULATION STARTING")
+    const dataset = await sim.simulate({
+        stopGrowthRatio:0.5,
+        period: 10000,
+        cb: async (d) => { 
+            console.log("simulation peek: ",d);
+            drawer.drawSimulation(d);
+            await sleep(200)
+            //return false;
+        },
+    });
+    const r = dataset[dataset.length-1].round;
+    console.log("simulation finished ", r,"rounds = ", r/2/60/24/365,"years")
+    drawer.drawSimulation(dataset);
 }
 run()
 

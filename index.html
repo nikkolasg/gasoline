@@ -9,24 +9,36 @@
   <body>
     <div class="container"> 
         <div class="row">
-            <div class="col-lg">
+            <div class="col">
                 <h1> Gas usage per height </h1>
             </div>
-            <div class="col-lg">
+            <div class="col">
                 <h1> Tx usage per height </h1>
             </div>
         </div>
         <div class="row">
-            <div class="col-lg">
+            <div class="col">
                 <canvas id="pieGasSectors">Loading...</canvas>
             </div>
-            <div class="col-lg">
+            <div class="col">
                 <canvas id="pieTxSectors">Loading...</canvas>
             </div>
         </div>
+    </div>
+    <div class="container">
         <div class="row">
-            <h1> SIMULATION </h1>
-            <canvas id="simulation">Loading...</canvas>
+            <div class="row">
+                <h1> Simlation </h1>
+            </div>
+            <div class="row">
+                <p id="simul-status"></p>
+            </div>
+            <div class="row">
+                <canvas id="simulation">Loading...</canvas>
+            </div>
+            <div class="row">
+                <canvas id="simulationGraph">Loading....</canvas>
+            </div>
         </div>
     </div>
     <script src="./utils.js"></script>
