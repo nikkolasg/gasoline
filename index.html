@@ -9,12 +9,13 @@
   <body>
     <div class="container"> 
         <div class="row">
-            <div class="col">
-                <h1> Gas usage per height </h1>
+            <div class="col-12">
+                <h1 class="text-center"> Epoch Gas & Transactions usage</h1>
             </div>
-            <div class="col">
-                <h1> Tx usage per height </h1>
-            </div>
+        </div>
+        <div class="row">
+            <p> This shows the distribution of gas and tx types in average from
+            the last epochs of the spacerace network </p>
         </div>
         <div class="row">
             <div class="col">
@@ -27,11 +28,41 @@
     </div>
     <div class="container">
        <div class="row">
-           <h1> Simlation </h1>
-       </div>
+            <div class="col-12">
+                <h1 class="text-center"> Simulation </h1>
+            </div>
+        </div>
        <div class="row">
-           <p id="simul-status"></p>
+           <p> This simulation takes the current distribution of gas found in
+           the recent epochs, and extrapolates it to determinate when the
+           network will not be able to grow anymore.</p>
+           <ul>
+                <li>For each deadline, we put as many
+                    window posts as required to prove all the sectors proven
+                    from the beginning of the simulation that belong to the
+                    current deadline. We divide evenly accross all epochs in the
+                    deadline the number of window post to put on chain.</li>
+                <li>We consider that one window post can
+                prove 2349 sectors. In practice window post can prove more but
+                it's average that most window post only includes one partition.</li>
+                <li>Then we fill the block with as many prove
+                    commits and pre commits as possible (keeping both equal),
+                    until we reach the average total gas used.</li>
+                <li>We stop the simulation when we reach
+                    a certain percentage of our emboarding rate (1% currently),
+                    and record the various informations.</li>
+            </ul> 
        </div>
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center">Results</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <p id="simul-status">Loading...</p>
+            </div>
+        </div>
        <div class="row">
            <canvas id="simulation">Loading...</canvas>
        </div>

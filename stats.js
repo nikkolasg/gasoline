@@ -83,4 +83,5 @@ export class Stats {
         }
         return avg / this.cids.length
     }
+
 }

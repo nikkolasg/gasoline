@@ -37,8 +37,12 @@ export class Drawer  {
             ]
         };
         window.pieGasSectorsUsed = new Chart(ctx, {
-            type: 'pie',
+            type: 'doughnut',
             data: data,
+            title: {
+                display: true,
+                text: 'Gas spent per methods per epoch',
+            }
         });
     }
 
@@ -72,8 +76,13 @@ export class Drawer  {
             ]
         };
         window.pieSectorsTxUsed = new Chart(ctx, {
-            type: 'pie',
+            type: 'doughnut',
             data: data,
+            title: {
+                display: true,
+                text: 'Transactions per methods per epoch',
+            }
+
         });
     }
 
@@ -91,19 +100,22 @@ export class Drawer  {
                     data: wpostGas,
                     borderColor: window.chartColors.red,
                     label: "window post gas",
+                    fill: false,
                 },
                 {
                     data: pregas,
                     borderColor: window.chartColors.orange,
                     label: "precommit gas",
+                    fill: false,
                 },
                 {
                     data: provegas,
                     borderColor: window.chartColors.yellow,
                     label: "provecommit gas",
+                    fill: false,
                 }
             ],
-                labels: data.map((d) => d.round),
+                labels: data.map((d) => Math.ceil(utils.roundsInDays(d.round))),
             };
             window.pieSimulation = new Chart(ctx, {
                 type: 'line',
@@ -111,10 +123,34 @@ export class Drawer  {
                 options: {
                     title: {
                     display: true,
-                    text: 'Gas evolution during simulation',
+                    text: 'Gas evolution during simulation per day',
                     }
                 }
             });
+    }
+
+    // printResult expects all data
+    printResult(fullData) {
+        const data = fullData[fullData.length - 1]
+        const wgas = data.wpost * this.estimator.wpostGas
+        const pregas = data.commits * this.estimator.preGas
+        const provegas = data.commits * this.estimator.proveGas
+        const leftgas = this.estimator.totalHeightGas 
+            - wgas
+            - pregas
+            - provegas
+
+        // update text
+        var n = document.getElementById("simul-status")
+        var strs = [
+            "<p>Final emboarding rate of sectors per epoch: " + data.commits + " sectors/rounds</p>",
+            "<p>Initial emboarding rate in PB per day: " + utils.growthRate(fullData[0].commits) + "</p>",
+            '<p class="font-weight-bold">Final emboarding rate in PB per day: ' + utils.growthRate(data.commits) + ' PB/day</p>',
+            "<p>Percentage of gas used for window post per height: " + 100*wgas/(wgas+pregas+provegas+leftgas) + "% </p>",
+            '<p class="font-weight-bold">Days before reaching this rate: ' + data.round / utils.roundsPerDay + " days</p>",
+        ]
+         
+        n.innerHTML = strs.join("") 
     }
 
     drawSimulation(data) {
@@ -130,17 +166,7 @@ export class Drawer  {
             - pregas
             - provegas
 
-        // update text
-        var n = document.getElementById("simul-status")
-        var strs = [
-            "Emboarding rate in sectors per height: " + data.commits,
-            "Emboarding rate in PB per day: " + utils.growthRate(data.commits),
-            "Percentage of gas used for window post per height: " + 100*wgas/(pregas+provegas+leftgas),
-            "Days in the simulation: " + data.round / utils.roundsPerDay
-        ]
-         
-        n.innerHTML = strs.join("<br>") 
-        
+                
         // update pie chart
         if (window.pieSimulation == undefined) {
             var ctx = document.getElementById("simulation").getContext('2d');
@@ -168,8 +194,18 @@ export class Drawer  {
                 ]
             };
             window.pieSimulation = new Chart(ctx, {
-                type: 'pie',
+                type: 'doughnut',
                 data: simulData,
+                options: {
+                    title: {
+                        display: true,
+                        text: 'Gas usage per epoch',
+                    },
+                     hover: {
+                        animationDuration: 0
+                    },
+                }
+
             });
         } else {
             //this.simulData.datasets.data = [wgas,pregas,provegas,leftgas]
@@ -188,7 +224,7 @@ export class Drawer  {
                 {
                     data: bandwidth,
                     backgroundColor: window.chartColors.red,
-                    label: "bandwdith in PB per days",
+                    label: "grow rate in PB",
                     fill:false,
                 },
             ],
@@ -200,7 +236,7 @@ export class Drawer  {
                 options: {
                     title: {
                     display: true,
-                    text: 'Bandwidth evolution during simulation',
+                    text: 'Growth rate evolution per day',
                     }
                 }
             });
