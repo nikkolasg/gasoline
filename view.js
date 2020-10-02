@@ -78,8 +78,43 @@ export class Drawer  {
     }
 
     // graph requires full dataset of the simulation
-    drawGraph(data)  {
-
+    drawGraphGas(data)  {
+        var mapToPoint = function(x,y) { return {x:x,y:y} }
+        var es = this.estimator
+        const wpostGas = data.map((d) => d.wpost*es.wpostGas)
+        const pregas = data.map((d) => d.commits*es.preGas)
+        const provegas = data.map((d) => d.commits*es.proveGas)
+        var ctx = document.getElementById("simulationGraph").getContext('2d');
+        let simulData = {
+            datasets: [
+                {
+                    data: wpostGas,
+                    borderColor: window.chartColors.red,
+                    label: "window post gas",
+                },
+                {
+                    data: pregas,
+                    borderColor: window.chartColors.orange,
+                    label: "precommit gas",
+                },
+                {
+                    data: provegas,
+                    borderColor: window.chartColors.yellow,
+                    label: "provecommit gas",
+                }
+            ],
+                labels: data.map((d) => d.round),
+            };
+            window.pieSimulation = new Chart(ctx, {
+                type: 'line',
+                data: simulData,
+                options: {
+                    title: {
+                    display: true,
+                    text: 'Gas evolution during simulation',
+                    }
+                }
+            });
     }
 
     drawSimulation(data) {
@@ -100,7 +135,8 @@ export class Drawer  {
         var strs = [
             "Emboarding rate in sectors per height: " + data.commits,
             "Emboarding rate in PB per day: " + utils.growthRate(data.commits),
-            "Percentage of gas used for window post per height: " + 100*wgas/(pregas+provegas+leftgas)
+            "Percentage of gas used for window post per height: " + 100*wgas/(pregas+provegas+leftgas),
+            "Days in the simulation: " + data.round / utils.roundsPerDay
         ]
          
         n.innerHTML = strs.join("<br>") 
@@ -141,4 +177,34 @@ export class Drawer  {
             window.pieSimulation.update()
         }
     }
+
+    drawGraphGrowth(data)  {
+        var mapToPoint = function(x,y) { return {x:x,y:y} }
+        var es = this.estimator
+        const bandwidth = data.map((d) => utils.growthRate(d.commits))
+        var ctx = document.getElementById("simulationGraphGrowth").getContext('2d');
+        let simulData = {
+            datasets: [
+                {
+                    data: bandwidth,
+                    backgroundColor: window.chartColors.red,
+                    label: "bandwdith in PB per days",
+                    fill:false,
+                },
+            ],
+                labels: data.map((d) => utils.roundsInDays(d.round)),
+            };
+            window.pieSimulation = new Chart(ctx, {
+                type: 'line',
+                data: simulData,
+                options: {
+                    title: {
+                    display: true,
+                    text: 'Bandwidth evolution during simulation',
+                    }
+                }
+            });
+    }
+
+
 }

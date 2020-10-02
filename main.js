@@ -26,18 +26,19 @@ async function run () {
     await sleep(2000)
     console.log("SIMULATION STARTING")
     const dataset = await sim.simulate({
-        stopGrowthRatio:0.5,
+        stopGrowthRatio:0.001,
         period: 10000,
         cb: async (d) => { 
             console.log("simulation peek: ",d);
             drawer.drawSimulation(d);
-            await sleep(200)
+            await sleep(100)
             //return false;
         },
     });
     const r = dataset[dataset.length-1].round;
     console.log("simulation finished ", r,"rounds = ", r/2/60/24/365,"years")
-    drawer.drawSimulation(dataset);
+    drawer.drawGraphGas(dataset)
+    drawer.drawGraphGrowth(dataset)
 }
 run()
 
