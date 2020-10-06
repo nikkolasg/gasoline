@@ -12,16 +12,19 @@ const endpointUrls = ['wss://lotus.jimpick.com/spacerace_api/1/node/rpc/v0','wss
 const f = MultiEndpointFetcher(endpointUrls)
 const stats = new Stats(f,3) 
 const sim = new Simulator(stats)
-const drawer = new Drawer(sim)
+const drawer = new Drawer(sim,stats)
 const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 async function run () {
     // wait that stats get all the data necessary
     await sim.fetchData()
+    const head = await f.head()
+    window.head = head
+    console.log("HEAD: ",head)
+    const biggest = await stats.biggestGasUserFor(5,6,7)
+    console.log("BIGGEST  ? : ",biggest)
     sim.describe()
     drawer.drawPieGasSectorsUsed()
     drawer.drawPieTxSectorsUsed()
-    console.log("BIGGEST GAS USER: ",(await stats.biggestGasUserFor()))
-    const biggest = await stats.biggestGasUserFor(5,6,7)
     drawer.drawGasPerUser(biggest)
     const dataset = await sim.simulate({
         stopGrowthRatio:0.01,

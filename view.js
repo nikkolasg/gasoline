@@ -2,9 +2,24 @@ import * as utils from './policy.js';
 
 export class Drawer  {
 
-    constructor(estimator) {
+    constructor(estimator, stats) {
         this.estimator = estimator
+        this.stats = stats
         this.simulData = undefined
+        document.getElementById("minerAddressInfo").onclick = async (e) => this.drawMinerPower(e)
+    }
+
+    async drawMinerPower(e) {
+       let tt = document.getElementById("minerAddress").value
+       console.log("drawMinerInfo called -> miner is ",tt)
+       let mif = await this.stats.minerEstimates(tt)
+       let str = "<p> Raw byte power: " + mif.size + "</p>"
+        str += "<p> Number of sectors: " + mif.nbSectors + "</p>"
+        str += "<p> Daily gas spent : " + mif.dailyPost + " gas</p>"
+        str += "<p> Daily gas price paid: " + mif.dailyPrice + " attoFIL/day</p>"
+       document.getElementById("minerInfo").innerHTML = str
+       console.log("drawMinerInfo called -> miner is ",tt, " -> ",mif)
+        return false
     }
 
     drawPieGasSectorsUsed() {
@@ -267,6 +282,8 @@ export class Drawer  {
         }
         // sort by decreasing order
         const sortedHeight = Object.keys(dataset).sort((a,b) => b - a)
+        console.log("BIGGEST MINERS: ",dataset)
+        console.log("BIGGEST SORTED MINERS:",sortedHeight)
         window.pieGasUser1 = drawPie("pieGasUsers1",sortedHeight[0],dataset[sortedHeight[0]])
         window.pieGasUser2 = drawPie("pieGasUsers2",sortedHeight[1],dataset[sortedHeight[1]])
     }

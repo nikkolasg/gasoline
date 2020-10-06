@@ -16,3 +16,22 @@ export function objectMap(obj, fn) {
       ([k, v], i) => fn(v, k, i)
     )
 }
+
+
+export function sizeToString(s) {
+    var biUnits = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"]
+	var unit = 0
+	while (s >= 1024 && unit < biUnits.length-1) {
+		s /= 1024
+		unit++
+	}
+	return `${s} ${biUnits[unit]}`
+}
+
+export function sizeToSectors(s) {
+    return s/1024/1024/1024/32
+}
+
+export function attoToFIL(atto) {
+    return atto * BigInt(10)**-18
+}

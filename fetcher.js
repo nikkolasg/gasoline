@@ -7,9 +7,12 @@ export class Fetcher {
     constructor(url) {
       const provider = new BrowserProvider(url)
       this.client = new LotusRPC(provider, { schema: testnet.fullNode })
+      // XXX Do this the meta way 
       this.blocks = {}
       this.msgs = {}
       this.receipts = {}
+      this.miners = {}
+      this.minfo = {}
     }
 
     async head() {
@@ -71,6 +74,24 @@ export class Fetcher {
         })
     }
 
+    async listMiners(tipset) {
+        if (tipset["/"] in this.miners) {
+            return this.miners[tipset["/"]]
+        }
+        let m = await this.client.stateListMiners(tipset)
+        this.miners[tipset["/"]] = m
+        return m
+    }
+
+    async getMinerPower(tipset,height,miner) {
+        if (tipset["/"] in this.minfo) {
+            return this.minfo[tipset["/"]]
+        }
+        //let m = await this.client.minerGetBaseInfo(miner,height,tipset)
+        let m = await this.client.stateMinerPower(miner,tipset)
+        this.minfo[tipset["/"]] = m
+        return m
+    }
 }
 
 const zip = (arr, ...arrs) => {
@@ -88,7 +109,7 @@ export function MultiEndpointFetcher(urls) {
                         try {
                             return await targetValue.apply(this, args); // (A)
                         } catch (e) {
-                            console.log("Error fetching from " + urls[0])
+                            console.log("Error fetching from " + urls[0],":",e)
                             urls = rotate(urls)
                             const provider = new BrowserProvider(urls[0])
                             target.client = new LotusRPC(provider, { schema: testnet.fullNode })

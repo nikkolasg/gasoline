@@ -102,6 +102,30 @@ export class Stats {
         console.log("biggests user gas: ",datas)
         return datas
     }
+
+    async avgGasFeeCap(...methods) {
+        var avg = 0
+        for (var cid in this.cids) { 
+            const msgs = await this.fetcher.parentAndReceiptsMessages(this.cids[cid],...methods)
+            avg += msgs.reduce((total,v) => total + v[0].Message.GasFeeCap, BigInt(0)) / msgs.length
+        }
+        return avg/this.cids.length
+    }
+
+    async minerEstimates(miner) {
+        let mif = await this.fetcher.getMinerPower(window.head.Cids,window.head.Height,miner)
+        let gas = await this.avgGasOfMethod(5)         
+        let nbSectors = utils.sizeToSectors(mif.TotalPower.RawBytePower)
+        let dailyGas = utils.sectorsToPost(nbSectors) * gas
+        let dailyPrice = utils.sectorsToPost(nbSectors) * gas 
+        dailyPrice = dailyPrice * (await this.avgGasFeeCap(5))
+        return {
+            size: utils.sizeToString(mif.TotalPower.RawBytePower),
+            nbSectors: nbSectors,
+            dailyGas: dailyGas,
+            dailyPrice: dailyPrice,
+        }
+    }
 }
 
 function defaultHandler(defaultValue) {
