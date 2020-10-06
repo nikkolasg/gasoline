@@ -76,3 +76,35 @@ export class Fetcher {
 const zip = (arr, ...arrs) => {
   return arr.map((val, i) => arrs.reduce((a, arr) => [...a, arr[i]], [val]));
 }
+
+export function MultiEndpointFetcher(urls) {
+    let fetcher = new Fetcher(urls[0])
+    return new Proxy(fetcher, {
+        get(target, propKey, receiver) {
+            const targetValue = Reflect.get(target, propKey, receiver);
+            if (typeof targetValue === 'function') {
+                return async function (...args) {
+                    for (var i = 0; i < urls.length; i++) {
+                        try {
+                            return await targetValue.apply(this, args); // (A)
+                        } catch (e) {
+                            console.log("Error fetching from " + urls[0])
+                            urls = rotate(urls)
+                            const provider = new BrowserProvider(urls[0])
+                            target.client = new LotusRPC(provider, { schema: testnet.fullNode })
+                            console.log("Switched to new endpoint " + urls[0])
+                        }
+                    }
+                    throw new Error("failed to fetch data from all endpoints " + urls)
+                }
+            } else {
+                return targetValue;
+            }
+        }
+    })
+}
+
+
+const rotate = (arr, count = 1) => {
+  return [...arr.slice(count, arr.length), ...arr.slice(0, count)];
+};

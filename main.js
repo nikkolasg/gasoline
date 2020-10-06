@@ -2,16 +2,14 @@
 import { LotusRPC } from 'https://unpkg.com/@filecoin-shipyard/lotus-client-rpc?module'
 import { BrowserProvider } from 'https://unpkg.com/@filecoin-shipyard/lotus-client-provider-browser?module'
 import { testnet } from 'https://unpkg.com/@filecoin-shipyard/lotus-client-schema?module'
-import { Fetcher } from './fetcher.js';
+import { MultiEndpointFetcher } from './fetcher.js';
 import { Stats } from './stats.js';
 import { Simulator } from './simulator.js';
 import { Drawer } from './view.js';
 
-const endpointUrl = 'wss://node.glif.io/space07/lotus/rpc/v0'
-const provider = new BrowserProvider(endpointUrl)
-const client = new LotusRPC(provider, { schema: testnet.fullNode })
-
-const f = new Fetcher(endpointUrl)
+const endpointUrls = ['wss://lotus.jimpick.com/spacerace_api/1/node/rpc/v0','wss://node.glif.io/space07/lotus/rpc/v0', 'ws://www.border.ninja:12342/node/rpc/v0', 'wss://lotus.jimpick.com/spacerace_api/0/node/rpc/v0']
+//const f = new Fetcher(endpointUrl)
+const f = MultiEndpointFetcher(endpointUrls)
 const stats = new Stats(f,3) 
 const sim = new Simulator(stats)
 const drawer = new Drawer(sim)
