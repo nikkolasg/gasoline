@@ -20,25 +20,30 @@ async function run () {
     const head = await f.head()
     window.head = head
     console.log("HEAD: ",head)
-    const biggest = await stats.biggestGasUserFor(5,6,7)
-    console.log("BIGGEST  ? : ",biggest)
+    //const biggest = await stats.biggestGasUserFor(5,6,7)
+    //console.log("BIGGEST  ? : ",biggest)
     sim.describe()
-    drawer.drawPieGasSectorsUsed()
-    drawer.drawPieTxSectorsUsed()
-    drawer.drawGasPerUser(biggest)
-    const dataset = await sim.simulate({
-        stopGrowthRatio:0.01,
-        period: 10000,
-        cb: async (d) => { 
-            console.log("simulation peek: ",d);
-            drawer.drawSimulation(d);
-            await sleep(100)
-            //return false;
-        },
-    });
-    drawer.printResult(dataset)
-    drawer.drawGraphGas(dataset)
-    drawer.drawGraphGrowth(dataset)
+    //drawer.drawPieGasSectorsUsed()
+    //drawer.drawPieTxSectorsUsed()
+    /*drawer.drawGasPerUser(biggest)*/
+    document.getElementById("wpostbut").onclick = async () => {
+        const perc = parseInt(document.getElementById("wpostperc").value,10) / 100
+        console.log("Running simulation with ",perc,"stop threshold")
+        const dataset = await sim.simulate({
+            wpostStopPerc: perc,
+            period: 10000,
+            cb: async (d) => { 
+                console.log("simulation peek: ",d);
+                drawer.drawSimulation(d);
+                await sleep(100)
+                //return false;
+            },
+        });
+        drawer.printResult(dataset)
+        drawer.drawGraphGas(dataset)
+        drawer.drawGraphGrowth(dataset)
+    }
+    console.log("setup done")
 }
 run()
 

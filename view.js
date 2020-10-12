@@ -156,16 +156,17 @@ export class Drawer  {
             - provegas
 
         // update text
-        var n = document.getElementById("simul-status")
-        var strs = [
-            "<p>Final emboarding rate of sectors per epoch: " + Math.round(data.commits) + " sectors/rounds</p>",
-            "<p>Initial emboarding rate in PB per day: " + utils.growthRate(fullData[0].commits).toFixed(2) + "</p>",
-            '<p class="font-weight-bold">Final emboarding rate in PB per day: ' + utils.growthRate(data.commits).toFixed(2) + ' PB/day</p>',
-            "<p>Percentage of gas used for window post per height: " + (100*wgas/(wgas+pregas+provegas+leftgas)).toFixed(2) + "% </p>",
-            '<p class="font-weight-bold">Days before reaching this rate: ' + (data.round / utils.roundsPerDay).toFixed(2) + " days</p>",
+        var n = document.getElementById("body-simul")
+        const values = [ (100*wgas/(wgas+pregas+provegas+leftgas)).toFixed(2),
+            utils.growthRate(fullData[0].commits).toFixed(2),
+            utils.growthRate(data.commits).toFixed(2),
+            utils.sizeToString(data.sectors * 32 * 1024 * 1024 * 1024),
+            (data.round / utils.roundsPerDay).toFixed(2)
         ]
-         
-        n.innerHTML = strs.join("") 
+        const rows = values.map((v) => "<td>" + v + "</td>")
+        const newRow = document.createElement("tr")
+        newRow.innerHTML = rows.join("")
+        n.appendChild(newRow)
     }
 
     drawSimulation(data) {

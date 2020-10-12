@@ -82,12 +82,19 @@
                 <li>Then we fill the block with as many prove
                     commits and pre commits as possible (keeping both equal),
                     until we reach the average total gas used.</li>
-                <li>We stop the simulation when we reach
-                    a certain percentage of the initial growth rate (1%
-                    currently), and record the various informations.</li>
+                <li>We stop the simulation when we reach a certain percentage of
+                    gas used only for window posts. You can parametrize this
+                    percentage using the box below.</li>
+                
             </ul> 
        </div>
        </hr>
+       <div class="row">
+            <div class="input-group mb-3">
+              <input type="text" class="form-control" placeholder="WPost gas stop threshold %" aria-label="wpost perc" aria-describedby="" id="wpostperc">
+            <button type="button" id="wpostbut" class="btn btn-primary">Run</button>
+            </div>
+        </div>
         <div class="row">
             <div class="col-12">
                 <h2 class="text-center">Results</h2>
@@ -95,7 +102,19 @@
         </div>
         <div class="row">
             <div class="col-12">
-                <p id="simul-status">Loading...</p>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Final WindowPost gas (%/epoch)</th>
+                      <th scope="col">Initial emboarding rate (PB/day)</th>
+                      <th scope="col">Final emboarding rate (PB/day)</th>
+                      <th scope="col">Final size of network </th>
+                      <th scope="col">Days until stop</th>
+                    </tr>
+                  </thead>
+                  <tbody id="body-simul">
+                  </tbody>
+                </table>
             </div>
         </div>
        <div class="row">

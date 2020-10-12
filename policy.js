@@ -25,6 +25,7 @@ export function sizeToString(s) {
 		s /= 1024
 		unit++
 	}
+    s = s.toFixed(2)
 	return `${s} ${biUnits[unit]}`
 }
 
